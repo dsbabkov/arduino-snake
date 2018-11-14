@@ -97,7 +97,7 @@ unsigned long time, timeNow;
 int gameSpeed;
 boolean skip, gameOver, gameStarted;
 int olddir;
-int selectedLevel;
+boolean (*selectedLevel)[2][16] = levelz;
  
 int key=-1;
 int oldkey=-1;
@@ -124,7 +124,6 @@ void drawMatrix()
   if (!gameOver)
   {
   x[pr][pc] = true;
-  //for (i=0;i<8;i++) lcd.createChar(i, nullChar);
   for(int r=0;r<2;r++)
   {
     for(int c=0;c<16;c++)
@@ -150,7 +149,7 @@ void drawMatrix()
       else
       {
         lcd.setCursor(c,r);
-        if (levelz[selectedLevel][r][c]) lcd.write(255);
+        if (selectedLevel[r][c]) lcd.write(255);
         else lcd.write(254);
       }
     }
@@ -206,7 +205,7 @@ void newPoint()
     pr = random(16);
     pc = random(80);
     newp = false;
-    if (levelz[selectedLevel][pr / 8][pc / 5]) newp=true;
+    if (selectedLevel[pr / 8][pc / 5]) newp=true;
     while (p->next != NULL && !newp)
     {
       if (p->row == pr && p->column == pc) newp = true;
@@ -232,7 +231,7 @@ void moveHead()
   if (head->row >= 16) head->row = 0;
   if (head->row < 0) head->row = 15;
  
-  if (levelz[selectedLevel][head->row / 8][head->column / 5]) gameOver = true; // wall collision check
+  if (selectedLevel[head->row / 8][head->column / 5]) gameOver = true; // wall collision check
  
   part *p;
   p = tail;
@@ -365,7 +364,7 @@ void loop()
          else
          {
            lcd.setCursor(14,0);
-           lcd.print(selectedLevel);
+           lcd.print(levelz - selectedLevel + 1);
          }
        }
      }
