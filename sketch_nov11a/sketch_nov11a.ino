@@ -75,8 +75,8 @@ byte mySnake[8][8] =
   B00000,
 }
 };
- 
-boolean levelz[5][2][16] = {
+
+boolean levelz[][2][16] = {
 {{false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false},
 {false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}},
  
@@ -89,13 +89,15 @@ boolean levelz[5][2][16] = {
 {{true,false,true,false,false,false,false,false,false,true,false,false,false,true,false,false},
 {false,false,false,false,true,false,false,true,false,false,false,true,false,false,false,true}}
 };
- 
+
+constexpr size_t levels = sizeof(levelz) / sizeof(levelz); //number of levels
+
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
 unsigned long time, timeNow;
 int gameSpeed;
 boolean skip, gameOver, gameStarted;
 int olddir;
-int selectedLevel,levels;
+int selectedLevel;
  
 int key=-1;
 int oldkey=-1;
@@ -107,7 +109,7 @@ boolean special;
  
 struct partdef
 {
-  int row,column,dir; //0 - up, 1 - down, 2 - right, 3 - left
+  int row,column,dir;
   struct partdef *next;
 };
 typedef partdef part;
@@ -326,7 +328,6 @@ void startF()
 }
 void setup()
 {
-  levels = 4; //number of lvls
   lcd.init();                     
   lcd.backlight();// Включаем подсветку дисплея
   lcd.clear();
