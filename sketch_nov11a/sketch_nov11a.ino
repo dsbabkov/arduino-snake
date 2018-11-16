@@ -8,6 +8,17 @@ enum DirectionPin {
   RIGHT = 5
 };
 
+constexpr uint8_t maxSnakeSize = 16;
+
+constexpr uint8_t lcdRowCount = 2;
+constexpr uint8_t lcdColumnCount = 16;
+constexpr uint8_t lcdCharRowCount = 8;
+constexpr uint8_t lcdCharColumnCount = 5;
+constexpr uint8_t lcdRowPixelCount = lcdRowCount * lcdCharRowCount;
+constexpr uint8_t lcdColumnPixelCount = lcdColumnCount * lcdCharColumnCount;
+constexpr uint16_t lcdPixelCount = lcdRowPixelCount * lcdColumnPixelCount;
+
+
 byte mySnake[8][8] =
 {
 { B00000,
@@ -76,35 +87,61 @@ byte mySnake[8][8] =
 }
 };
 
-boolean levelz[][2][16] = {
-{{false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false},
-{false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false}},
- 
-{{true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true},
-{true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true}},
- 
-{{true,false,false,false,true,false,false,false,false,false,false,true,false,false,false,true},
-{true,false,false,false,false,false,false,false,true,false,false,false,false,false,false,true}},
- 
-{{true,false,true,false,false,false,false,false,false,true,false,false,false,true,false,false},
-{false,false,false,false,true,false,false,true,false,false,false,true,false,false,false,true}}
+class Level {
+public:
+  using ColumnsStorage = uint16_t;
+  using Storage = ColumnsStorage [lcdRowCount];
+
+private:
+  static constexpr auto columnsStorageSizeInBits = sizeof(ColumnsStorage) * 8;
+  static_assert(columnsStorageSizeInBits == lcdColumnCount, "Invalid type to store level");  
+
+public:
+  explicit Level (const Storage &storage = {}) {
+    for (size_t i = 0; i < lcdRowCount; ++i) {
+      storage_[i] = storage[i];
+    }
+  }
+  explicit Level (ColumnsStorage row1, ColumnsStorage row2)
+    : Level({row1, row2})
+    {}
+
+  bool operator()(size_t i, unsigned j) const {
+    const ColumnsStorage &columnsStorage = storage_[i];
+    return columnsStorage & (static_cast<ColumnsStorage>(1) << (columnsStorageSizeInBits - 1 - j));
+  }
+
+private:
+  Storage storage_;
 };
 
-constexpr size_t levels = sizeof(levelz) / sizeof(levelz); //number of levels
+Level Levelz[] = {
+  Level(), // empty
+  
+  Level(0b1000000000000001,
+        0b1000000000000001),
+  
+  Level(0b1000100000010001,
+        0b1000000010000001),
 
-LiquidCrystal_I2C lcd(0x3F, 16, 2);
+  Level(0b1010000001000100,
+        0b0000100100010001)
+};
+
+constexpr size_t levels = sizeof(Levelz) / sizeof(*Levelz); //number of levels
+
+LiquidCrystal_I2C lcd(0x3F, lcdColumnCount, lcdRowCount);
 unsigned long time, timeNow;
 int gameSpeed;
 boolean skip, gameOver, gameStarted;
 int olddir;
-boolean (*selectedLevel)[2][16] = levelz;
+const Level *selectedLevel = Levelz;
  
 int key=-1;
 int oldkey=-1;
  
 boolean x[16][80];
 byte myChar[8];
-byte nullChar[8] = { 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0 };
 boolean special;
  
 struct partdef
@@ -149,7 +186,7 @@ void drawMatrix()
       else
       {
         lcd.setCursor(c,r);
-        if (selectedLevel[r][c]) lcd.write(255);
+        if ((*selectedLevel)(r, c)) lcd.write(255);
         else lcd.write(254);
       }
     }
@@ -205,7 +242,7 @@ void newPoint()
     pr = random(16);
     pc = random(80);
     newp = false;
-    if (selectedLevel[pr / 8][pc / 5]) newp=true;
+    if ((*selectedLevel)(pr / 8, pc / 5)) newp=true;
     while (p->next != NULL && !newp)
     {
       if (p->row == pr && p->column == pc) newp = true;
@@ -231,7 +268,7 @@ void moveHead()
   if (head->row >= 16) head->row = 0;
   if (head->row < 0) head->row = 15;
  
-  if (selectedLevel[head->row / 8][head->column / 5]) gameOver = true; // wall collision check
+  if ((*selectedLevel)(head->row / 8, head->column / 5)) gameOver = true; // wall collision check
  
   part *p;
   p = tail;
@@ -364,7 +401,7 @@ void loop()
          else
          {
            lcd.setCursor(14,0);
-           lcd.print(levelz - selectedLevel + 1);
+           lcd.print(Levelz - selectedLevel + 1);
          }
        }
      }
