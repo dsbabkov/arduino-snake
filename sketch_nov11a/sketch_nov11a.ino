@@ -18,74 +18,83 @@ constexpr uint8_t lcdRowPixelCount = lcdRowCount * lcdCharRowCount;
 constexpr uint8_t lcdColumnPixelCount = lcdColumnCount * lcdCharColumnCount;
 constexpr uint16_t lcdPixelCount = lcdRowPixelCount * lcdColumnPixelCount;
 
+LiquidCrystal_I2C lcd(0x3F, lcdColumnCount, lcdRowCount);
 
-byte mySnake[8][8] =
-{
-{ B00000,
-  B00000,
-  B00011,
-  B00110,
-  B01100,
-  B11000,
-  B00000,
-},
-{ B00000,
-  B11000,
-  B11110,
-  B00011,
-  B00001,
-  B00000,
-  B00000,
-},
-{ B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-  B01110,
-},
-{ B00000,
-  B00000,
-  B00011,
-  B01111,
-  B11000,
-  B00000,
-  B00000,
-},
-{ B00000,
-  B11100,
-  B11111,
-  B00001,
-  B00000,
-  B00000,
-  B00000,
-},
-{ B00000,
-  B00000,
-  B00000,
-  B11000,
-  B01101,
-  B00111,
-  B00000,
-},
-{ B00000,
-  B00000,
-  B01110,
-  B11011,
-  B11111,
-  B01110,
-  B00000,
-},
-{ B00000,
-  B00000,
-  B00000,
-  B01000,
-  B10000,
-  B01000,
-  B00000,
+void drawPixmapSnake() {
+  using LcdChar = byte[lcdCharRowCount];
+  constexpr LcdChar snake[] =
+  {
+  { B00000,
+    B00000,
+    B00011,
+    B00110,
+    B01100,
+    B11000,
+    B00000,
+  },
+  { B00000,
+    B11000,
+    B11110,
+    B00011,
+    B00001,
+    B00000,
+    B00000,
+  },
+  { B00000,
+    B00000,
+    B00000,
+    B00000,
+    B00000,
+    B11111,
+    B01110,
+  },
+  { B00000,
+    B00000,
+    B00011,
+    B01111,
+    B11000,
+    B00000,
+    B00000,
+  },
+  { B00000,
+    B11100,
+    B11111,
+    B00001,
+    B00000,
+    B00000,
+    B00000,
+  },
+  { B00000,
+    B00000,
+    B00000,
+    B11000,
+    B01101,
+    B00111,
+    B00000,
+  },
+  { B00000,
+    B00000,
+    B01110,
+    B11011,
+    B11111,
+    B01110,
+    B00000,
+  },
+  { B00000,
+    B00000,
+    B00000,
+    B01000,
+    B10000,
+    B01000,
+    B00000,
+  }
+  };
+  
+  for(byte i = 0; i < 8; ++i) {
+    lcd.createChar(i, snake[i]);
+    lcd.write(i);
+  }
 }
-};
 
 class Level {
 public:
@@ -176,7 +185,6 @@ private:
 
 constexpr size_t levels = sizeof(Levelz) / sizeof(*Levelz); //number of levels
 
-LiquidCrystal_I2C lcd(0x3F, lcdColumnCount, lcdRowCount);
 unsigned long time, timeNow;
 int gameSpeed;
 boolean skip, gameOver, gameStarted;
@@ -394,14 +402,10 @@ void startF()
   selectedLevel = Levelz;
  
   lcd.clear();
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.print("Select level: 1");
-  for(i=0;i<8;i++)
-  {
-    lcd.createChar(i,mySnake[i]);
-    lcd.setCursor(i+4,1);
-    lcd.write(byte(i));
-  }
+  lcd.setCursor(4, 1);
+  drawPixmapSnake();
   collected = 0;
   gameSpeed = 8;
   createSnake(3);
