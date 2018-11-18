@@ -19,7 +19,7 @@ constexpr uint8_t lcdColumnPixelCount = lcdColumnCount * lcdCharColumnCount;
 constexpr uint16_t lcdPixelCount = lcdRowPixelCount * lcdColumnPixelCount;
 
 
-constexpr byte mySnake[8][8] =
+byte mySnake[8][8] =
 {
 { B00000,
   B00000,
@@ -187,6 +187,9 @@ int key=-1;
 int oldkey=-1;
  
 Canvas x;
+byte myChar[8];
+boolean special;
+ 
 struct partdef
 {
   int row,column,dir;
@@ -206,19 +209,17 @@ void drawMatrix()
   x(pr, pc) = true;
   for(int r=0;r<lcdRowCount;r++)
   {
-    for(int c=0;c<lcdColumnCount;c++)
+    for(int c=0;c<16;c++)
     {
-      bool special = false;
-      byte myChar[8] = {};
-      for(int i=0;i<lcdCharRowCount;i++)
+      special = false;
+      for(int i=0;i<8;i++)
       {
-        byte b = 0;
-        for (int j = 0; j < lcdCharColumnCount; ++j) {
-          if (x(r * lcdCharRowCount + i, c * lcdCharColumnCount + j)) {
-            constexpr byte leftPointPattern = 1 << (lcdCharColumnCount - 1);
-            b |= leftPointPattern >> j;
-          }
-        }
+        byte b=B00000;
+        if (x(r*8+i, c*5+0)) {b+=B10000; special = true;}
+        if (x(r*8+i, c*5+1)) {b+=B01000; special = true;}
+        if (x(r*8+i, c*5+2)) {b+=B00100; special = true;}
+        if (x(r*8+i, c*5+3)) {b+=B00010; special = true;}
+        if (x(r*8+i, c*5+4)) {b+=B00001; special = true;}
         myChar[i] = b;
       }
       if (special)
