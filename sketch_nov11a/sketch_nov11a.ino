@@ -128,6 +128,52 @@ Level Levelz[] = {
         0b0000100100010001)
 };
 
+
+class Pixel {
+  friend class Canvas;
+public:
+  operator bool () const {
+    return canvasStorage_ & (1 << bitNumber_);
+  }
+
+  Pixel &operator= (bool val) {
+    const uint16_t mask = (1u << bitNumber_);
+    if (val) {
+      canvasStorage_ |= mask;
+    }
+    else {
+      canvasStorage_ &= ~mask;
+    }
+    return *this;
+  }
+  
+private:
+  Pixel(uint16_t &canvasStorage, uint8_t bitNumber)
+    : canvasStorage_(canvasStorage), bitNumber_(bitNumber)
+    {}
+
+private:
+  uint16_t &canvasStorage_;
+  uint8_t bitNumber_;
+};
+
+class Canvas {
+public:
+  Canvas() = default;
+  Canvas &operator= (const Canvas &) = default;
+  
+  Pixel operator()(uint8_t row, size_t col) {
+    return Pixel(pixels_[col], row);
+  }
+
+  void clear() {
+    *this = Canvas();
+  }
+  
+private:
+  uint16_t pixels_[80] = {};
+};
+
 constexpr size_t levels = sizeof(Levelz) / sizeof(*Levelz); //number of levels
 
 LiquidCrystal_I2C lcd(0x3F, lcdColumnCount, lcdRowCount);
@@ -140,8 +186,7 @@ const Level *selectedLevel = Levelz;
 int key=-1;
 int oldkey=-1;
  
-boolean x[16][80];
- 
+Canvas x;
 struct partdef
 {
   int row,column,dir;
@@ -158,7 +203,7 @@ void drawMatrix()
   int cc=0;
   if (!gameOver)
   {
-  x[pr][pc] = true;
+  x(pr, pc) = true;
   for(int r=0;r<lcdRowCount;r++)
   {
     for(int c=0;c<lcdColumnCount;c++)
@@ -169,7 +214,7 @@ void drawMatrix()
       {
         byte b = 0;
         for (int j = 0; j < lcdCharColumnCount; ++j) {
-          if (x[r * lcdCharRowCount + i][c * lcdCharColumnCount + j]) {
+          if (x(r * lcdCharRowCount + i, c * lcdCharColumnCount + j)) {
             constexpr byte leftPointPattern = 1 << (lcdCharColumnCount - 1);
             b |= leftPointPattern >> j;
           }
@@ -281,7 +326,7 @@ void moveHead()
     gameOverFunction();
   else
   {
-  x[head->row][head->column] = true;
+  x(head->row, head->column) = true;
  
   if (head->row == pr && head->column == pc) // point pickup check
   {
@@ -296,7 +341,7 @@ void moveAll()
 {
   part *p;
   p = tail;
-  x[p->row][p->column] = false;
+  x(p->row, p->column) = false;
   while (p->next != NULL)
   {
     p->row = p->next->row;
@@ -309,9 +354,7 @@ void moveAll()
  
 void createSnake(int n) // n = size of snake
 {
-  for (i=0;i<16;i++)
-    for (j=0;j<80;j++)
-      x[i][j] = false;
+  x.clear();
          
   part *p, *q;
   tail = (part*)malloc(sizeof(part));
@@ -319,13 +362,13 @@ void createSnake(int n) // n = size of snake
   tail->column = 39 + n/2;
   tail->dir = LEFT;
   q = tail;
-  x[tail->row][tail->column] = true;
+  x(tail->row, tail->column) = true;
   for (i = 0; i < n-1; i++) // build snake from tail to head
   {
     p = (part*)malloc(sizeof(part));
     p->row = q->row;
     p->column = q->column - 1; //initial snake id placed horizoltally
-    x[p->row][p->column] = true;
+    x(p->row, p->column) = true;
     p->dir = q->dir;
     q->next = p;
     q = p;
