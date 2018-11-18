@@ -389,7 +389,7 @@ void startF()
 {
   gameOver = false;
   gameStarted = false;
-  selectedLevel = 1;
+  selectedLevel = Levelz;
  
   lcd.clear();
   lcd.setCursor(0,0);
@@ -432,19 +432,18 @@ void loop()
        if (key >=0)
        {
          olddir = head->dir;
-         if (key==UP && selectedLevel<levels) selectedLevel++;
-         if (key==DOWN && selectedLevel>1) selectedLevel--;
+         if (key==UP && selectedLevel<(Levelz + levels - 1)) selectedLevel++;
+         if (key==DOWN && selectedLevel>Levelz) selectedLevel--;
          if (key==RIGHT)
          {
            lcd.clear();
-           selectedLevel--;
            newPoint();
            gameStarted = true;
          }
          else
          {
            lcd.setCursor(14,0);
-           lcd.print(Levelz - selectedLevel + 1);
+           lcd.print(selectedLevel - Levelz + 1);
          }
        }
      }
