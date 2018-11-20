@@ -458,7 +458,6 @@ void loop()
    key = get_key();  // convert into key press
    if (key != oldkey)   // if keypress is detected
    {
-     delay(50);  // wait for debounce time
      key = get_key();    // convert into key press
      if (key != oldkey)    
      {  
