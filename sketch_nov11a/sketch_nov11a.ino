@@ -218,10 +218,10 @@ void drawMatrix()
   {
     for(int c = 0; c < lcdColumnCount; ++c)
     {
-      boolean special;
-      byte b = 0;
-      for(int i=0; i < lcdCharColumnCount; ++i)
+      boolean special = false;
+      for(int i=0; i < lcdCharRowCount; ++i)
       {
+        byte b = 0;
         for (int j = 0; j < lcdCharColumnCount; ++j) {
           if (x(r * lcdCharRowCount + i, c * lcdCharColumnCount + j)) {
             constexpr byte leftPointPattern = 1 << (lcdCharColumnCount - 1);
